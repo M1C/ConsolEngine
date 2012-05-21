@@ -9,7 +9,10 @@ namespace ConsolEngine
     {
         protected string _name;
         protected Point _location;
-        protected bool _needsRedraw = false;
+        protected bool _collides;
+        protected World _world;
+
+        protected bool _needsRedraw = true;
 
         public string Name
         {
@@ -25,6 +28,18 @@ namespace ConsolEngine
                 _location = value;
                 _needsRedraw = true;
             }
+        }
+
+        public bool Collides
+        {
+            get { return _collides; }
+            set { _collides = value; }
+        }
+
+        public World World
+        {
+            get { return _world; }
+            set { _world = value; }
         }
 
         public Entity(string name, Point location)

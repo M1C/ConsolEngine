@@ -9,19 +9,34 @@ namespace ConsolEngine
 {
     public class World
     {
-        private List<Entity> entities;
-        private List<Effect> effects; 
-        private Thread tickThread;
+        private List<Entity> _entities;
+        private List<Effect> _effects;
+        private Thread _tickThread;
+        private Map _map;
+
+        public Map Map
+        {
+            get { return _map; }
+            set { _map = value; }
+        }
 
         public const int TickTime = 40;
 
         public World()
         {
-            entities = new List<Entity>();
-            effects = new List<Effect>();
-            tickThread = new Thread(Tick);
+            _entities = new List<Entity>();
+            _effects = new List<Effect>();
+            _tickThread = new Thread(Tick);
+        }
 
-            tickThread.Start();
+        public void Start()
+        {
+            _tickThread.Start();
+        }
+
+        public bool IsFree(Point location)
+        {
+            return _map.IsFree(location) && _entities.Where(e => e.Collides).All(e => e.Location != location);
         }
 
         private void Tick()
@@ -30,7 +45,7 @@ namespace ConsolEngine
             while (true)
             {
                 stop.Restart();
-                foreach (var effect in effects)
+                foreach (var effect in _effects)
                 {
                     effect.Apply(this);
                 }
@@ -38,7 +53,7 @@ namespace ConsolEngine
                 if (Console.KeyAvailable)
                 {
                     var key = Console.ReadKey(true);
-                    foreach (var e in entities.OfType<IEntityKeyHandler>())
+                    foreach (var e in _entities.OfType<IEntityKeyHandler>())
                     {
                         e.HandleKey(key);
                     }
@@ -58,25 +73,28 @@ namespace ConsolEngine
 
         public void Draw()
         {
-            foreach (var entity in entities)
+            _map.Draw();
+            foreach (var entity in _entities)
             {
                 entity.Draw();
             }
+            MConsole.FireBatch();
         }
 
         #region Collection Methods
         public void AddEntity(Entity e)
         {
-            if (entities.Any(ee => ee.Name == e.Name))
+            if (_entities.Any(ee => ee.Name == e.Name))
                 throw new ArgumentException("Entity exists allready!", "e");
-            entities.Add(e);
+            _entities.Add(e);
+            e.World = this;
         }
 
         public void AddEffect(Effect e)
         {
-            if (effects.Any(ee => ee.Name == e.Name))
+            if (_effects.Any(ee => ee.Name == e.Name))
                 throw new ArgumentException("Effect exists allready!", "e");
-            effects.Add(e);
+            _effects.Add(e);
         }
         #endregion
 

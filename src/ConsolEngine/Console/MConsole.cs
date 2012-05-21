@@ -7,6 +7,50 @@ namespace ConsolEngine
 {
     public static class MConsole
     {
+        private static Point _location;
+        private static ConsoleColor _fColor;
+        private static ConsoleColor _bColor;
+
+        public static ConsoleColor ForegroundColor
+        {
+            get { return _fColor; }
+            set
+            {
+                if (value != _fColor)
+                {
+                    _fColor = value;
+                    Console.ForegroundColor = _fColor;
+                }
+            }
+        }
+
+        public static ConsoleColor BackgroundColor
+        {
+            get { return _bColor; }
+            set
+            {
+                if (value != _bColor)
+                {
+                    _bColor = value;
+                    Console.BackgroundColor = _bColor;
+                }
+            }
+        }
+
+        public static Point CursorLocation
+        {
+            get { return _location; }
+            set
+            {
+                if (value.Left != _location.Left)
+                    Console.CursorLeft = value.Left;
+                if (value.Top != _location.Top)
+                    Console.CursorTop = value.Top;
+
+                _location = value;
+            }
+        }
+
         private static List<DrawJob> _jobs;
 
         private struct DrawJob
@@ -17,12 +61,14 @@ namespace ConsolEngine
                 get { return Text.Length; }
             }
             public Point Location;
-            public ConsoleColor FrontColor;
+            public ConsoleColor ForeColor;
             public ConsoleColor BackColor;
 
             public void Do()
             {
-                
+                CursorLocation = Location;
+                Console.Write(Text);
+                Console.CursorLeft -= Lenght;
             }
         }
 
@@ -33,21 +79,26 @@ namespace ConsolEngine
 
         public static void FireBatch()
         {
-            SortJobs();
+            var jobs = SortJobs();
 
-            foreach (var job in _jobs)
+            foreach (var jj in jobs)
             {
-                job.Do();
+                ForegroundColor = jj.Key;
+                foreach (var job in jj.Value)
+                {
+                    BackgroundColor = job.BackColor;
+                    job.Do();
+                }
             }
         }
 
-        private static void SortJobs()
+        private static Dictionary<ConsoleColor, DrawJob[]> SortJobs()
         {
-            var colors = _jobs.Select(j => j.FrontColor).Distinct();
-            var jobs = colors.SelectMany(c => _jobs.Where(j => j.FrontColor == c).OrderBy(j => j.BackColor)).ToArray();
-
+            var colors = _jobs.Select(j => j.ForeColor).Distinct();
+            var jobs = colors.ToDictionary(c => c,
+                                           c => _jobs.Where(j => j.ForeColor == c).ToArray());
             _jobs.Clear();
-            _jobs.AddRange(jobs);
+            return jobs;
         }
 
         public static void DrawAt(Point loc, object o, ConsoleColor fColor = ConsoleColor.White, ConsoleColor bColor = ConsoleColor.Black)
@@ -57,7 +108,7 @@ namespace ConsolEngine
                               Text = o.ToString(),
                               Location = loc,
                               BackColor = bColor,
-                              FrontColor = fColor
+                              ForeColor = fColor
                           });
         }
     }

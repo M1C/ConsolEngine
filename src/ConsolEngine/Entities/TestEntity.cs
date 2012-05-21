@@ -7,6 +7,7 @@ namespace ConsolEngine
 {
     public class TestEntity : Entity, IEntityHasColor, IEntityKeyHandler
     {
+        private Point _oldLocation;
         private ConsoleColor _color;
 
         public ConsoleColor Color
@@ -28,28 +29,34 @@ namespace ConsolEngine
         {
             if (_needsRedraw)
             {
-                MConsole.DrawAt(Location, 'o', Color);
-                _needsRedraw = true;
+                MConsole.DrawAt(new Point(_oldLocation.Top, _oldLocation.Left * 2), ' ', Color);
+                MConsole.DrawAt(new Point(Location.Top, Location.Left*2), 'o', Color);
+                _needsRedraw = false;
+                _oldLocation = _location;
             }
         }
 
         public void HandleKey(ConsoleKeyInfo key)
         {
+            var location = _location;
             switch(key.Key)
             {
                 case ConsoleKey.UpArrow:
-                    _location.Top--;
+                    location.Top--;
                     break;
                 case ConsoleKey.DownArrow:
-                    _location.Top++;
+                    location.Top++;
                     break;
                 case ConsoleKey.LeftArrow:
-                    _location.Left--;
+                    location.Left--;
                     break;
                 case ConsoleKey.RightArrow:
-                    _location.Left++;
+                    location.Left++;
                     break;
             }
+
+            if (_world.IsFree(location))
+                Location = location;
         }
     }
 }
