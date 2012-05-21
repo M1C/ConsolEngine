@@ -2,5 +2,9 @@
 bin
 obj
 
-# mstest test results
-TestResults
+# ReSharper-Stuff
+_ReSharper.*
+
+# Usersettings
+*.suo
+*.DotSettings
